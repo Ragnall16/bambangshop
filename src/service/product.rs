@@ -2,11 +2,9 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 
 use bambangshop::{Result, compose_error_response};
-use crate::model::notification::Notification;
 use crate::model::product::Product;
 use crate::repository::product::ProductRepository;
-
-use super::notification::NotificationService;
+use crate::service::notification::NotificationService;
 
 pub struct ProductService;
 
@@ -15,6 +13,8 @@ impl ProductService {
         product.product_type = product.product_type.to_uppercase();
         let product_result: Product = ProductRepository::add(product);
 
+        NotificationService.notify(&product_result.product_type, "CREATED", 
+            product_result.clone());
         return Ok(product_result);
     }
 
@@ -43,6 +43,7 @@ impl ProductService {
         }
         let product: Product = product_opt.unwrap();
 
+        NotificationService.notify(&product.product_type, "DELETED", product.clone());
         return Ok(Json::from(product));
     }
 
